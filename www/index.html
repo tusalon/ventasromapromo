@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#556e45">
+<title>VR26 Promo</title>
+<style>
+  :root { --verde:#556e45; --verde2:#6f8f5c; --arena:#d8c6a5; --tinta:#1f2419; --crema:#f5f1e8; --gris:#6b6b6b; --borde:#e4ddcc; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,-apple-system,Roboto,sans-serif; background:var(--crema); color:var(--tinta);
+         padding-bottom:calc(72px + env(safe-area-inset-bottom)); }
+  header { background:var(--verde); color:#fff; padding:calc(14px + env(safe-area-inset-top)) 16px 14px;
+           display:flex; align-items:center; gap:10px; position:sticky; top:0; z-index:5; }
+  header img { width:34px; height:34px; border-radius:9px; }
+  header h1 { font-size:18px; margin:0; flex:1; }
+  header small { opacity:.85; font-size:12px; }
+  main { padding:16px; max-width:640px; margin:0 auto; }
+  nav { position:fixed; bottom:0; left:0; right:0; background:#fff; border-top:1px solid var(--borde);
+        display:flex; padding-bottom:env(safe-area-inset-bottom); z-index:5; }
+  nav button { flex:1; border:0; background:none; padding:10px 0 12px; font-size:11px; color:var(--gris); }
+  nav button b { display:block; font-size:20px; font-weight:normal; }
+  nav button.on { color:var(--verde); font-weight:700; }
+  .card { background:#fff; border:1px solid var(--borde); border-radius:16px; padding:14px; margin-bottom:12px; }
+  .tema { background:var(--arena); color:var(--tinta); }
+  h2 { font-size:15px; margin:0 0 10px; }
+  .fila { display:flex; align-items:center; gap:10px; padding:10px 0; border-top:1px solid var(--borde); }
+  .fila:first-of-type { border-top:0; }
+  .fila .txt { flex:1; min-width:0; }
+  .fila .txt small { display:block; color:var(--gris); font-size:12px; margin-top:2px; }
+  .barra { height:6px; background:var(--borde); border-radius:3px; margin-top:6px; overflow:hidden; }
+  .barra i { display:block; height:100%; background:var(--verde2); }
+  .cnt { font-weight:700; font-variant-numeric:tabular-nums; min-width:52px; text-align:right; }
+  .ok { color:var(--verde); }
+  button.b, a.b { border:0; border-radius:12px; padding:10px 14px; font-size:14px; font-weight:600;
+                  background:var(--verde); color:#fff; text-decoration:none; display:inline-block; text-align:center; }
+  button.b2 { background:#fff; color:var(--verde); border:1.5px solid var(--verde); }
+  button.mini { padding:6px 10px; font-size:13px; border-radius:10px; }
+  button.mas { width:44px; height:44px; border-radius:50%; font-size:22px; padding:0; }
+  input, select, textarea { width:100%; font:inherit; font-size:15px; padding:10px 12px; border:1px solid var(--borde);
+                            border-radius:12px; background:#fff; color:var(--tinta); margin-bottom:8px; }
+  textarea { min-height:90px; }
+  .dos { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
+  .chip { border:1px solid var(--borde); background:#fff; border-radius:999px; padding:6px 12px; font-size:13px; color:var(--tinta); }
+  .chip.on { background:var(--verde); color:#fff; border-color:var(--verde); }
+  .chip.cero { border-style:dashed; color:var(--gris); }
+  .msg { white-space:pre-wrap; font-size:14px; line-height:1.45; background:var(--crema); border-radius:12px; padding:10px; margin:8px 0; }
+  .acc { display:flex; gap:8px; flex-wrap:wrap; }
+  .etapa { font-size:12px; background:var(--crema); border:1px solid var(--borde); border-radius:999px; padding:2px 8px; }
+  .kpi { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .kpi div { background:#fff; border:1px solid var(--borde); border-radius:14px; padding:10px; text-align:center; }
+  .kpi b { display:block; font-size:22px; }
+  .kpi span { font-size:11px; color:var(--gris); }
+  .vacio { color:var(--gris); text-align:center; padding:20px 0; font-size:14px; }
+  #toast { position:fixed; left:50%; bottom:90px; transform:translateX(-50%); background:var(--tinta); color:#fff;
+           padding:10px 16px; border-radius:12px; font-size:14px; opacity:0; transition:opacity .2s; pointer-events:none; z-index:9; }
+  #toast.on { opacity:1; }
+  details summary { font-weight:600; cursor:pointer; padding:4px 0; }
+</style>
+</head>
+<body>
+<header><img src="logo.png" alt=""><h1>VentasRoma26 Promo</h1><small id="fecha"></small></header>
+<main id="app"></main>
+<nav id="nav"></nav>
+<div id="toast"></div>
+<script>
+const PROVINCIAS = ["Pinar del Río","Artemisa","La Habana","Mayabeque","Matanzas","Cienfuegos","Villa Clara","Sancti Spíritus",
+  "Ciego de Ávila","Camagüey","Las Tunas","Holguín","Granma","Santiago de Cuba","Guantánamo","Isla de la Juventud"];
+const NICHOS = ["Alimentos / combos","Uñas y belleza","Restaurante / cafetería","Ropa y calzado","Gestor / revendedor","Otro"];
+const TIPOS = ["Negocio","Embajador","Alianza"];
+const ETAPAS = ["Contactado","Respondió","Registrado","5+ productos","Primer pedido","Pagó"];
+const TEMAS = [ // getDay(): 0 = domingo
+  ["Recordatorio","\"10 días gratis, empieza hoy.\""],
+  ["Problema","\"¿Cuántas veces al día respondes '¿a cuánto?'?\""],
+  ["Tienda destacada","Captura real de una tienda de la semana (con permiso)."],
+  ["Tutorial 30 s","\"Sube un producto en 20 segundos.\""],
+  ["Restaurantes","\"Tu carta en un enlace y el pedido te llega hecho.\""],
+  ["Prueba","Captura del aviso de pedido o del seguimiento."],
+  ["Gestores","\"Gana vendiendo con un enlace.\""],
+];
+const TAREAS = [
+  ["dm","Mensajes directos a vendedores",20],
+  ["grupos","Publicaciones en grupos (rota provincias)",10],
+  ["post","Publicación propia en el feed",1],
+  ["hist","Historias",3],
+  ["seg","Seguimiento a registros de ayer",1],
+  ["vacias","Ayudar tiendas vacías",1],
+];
+const MENSAJES = [
+  ["Directo a vendedor",`Hola{, nombre}, vi tus productos en el grupo. ¿Te puedo mostrar algo? Te monto tu catálogo online con fotos y precios, y los pedidos te llegan por WhatsApp ya hechos. 10 días gratis, sin comisiones.
+
+Mira cómo queda una tienda real: https://ventasroma26.com`],
+  ["Te lo monto yo",`Si quieres, te subo yo los primeros 10 productos. Solo mándame las fotos y los precios y en un rato tienes tu tienda lista para compartir.`],
+  ["Rescate tienda vacía",`Hola{, nombre}, vi que creaste tu tienda en VentasRoma26 pero todavía no tiene productos. ¿Te ayudo a subirlos? Mándame fotos y precios y te la dejo lista hoy.`],
+  ["Seguimiento registro",`Hola{, nombre}, ¿qué tal con tu tienda? Cuando subas unos 5 productos, comparte tu enlace en tu estado y en tus grupos: ahí empiezan a llegar los pedidos. Cualquier duda me escribes.`],
+  ["Pedir testimonio",`Hola{, nombre}, ¡felicidades por tus pedidos! ¿Me dejas compartir una captura de tu tienda y una frase tuya sobre cómo te va? Me ayudaría mucho.`],
+  ["Invitar embajador",`Hola{, nombre}, estoy buscando una persona por provincia que traiga negocios a VentasRoma26 (catálogo online con pedidos por WhatsApp). Por cada tienda que se active, ganas tú. ¿Te interesa que te cuente?`],
+  ["Alianza con página",`Hola, me encanta lo que hacen con la página. Tengo VentasRoma26, catálogos online con pedidos por WhatsApp para negocios cubanos. Me gustaría proponerles una alianza: les monto su tienda y ustedes nos ayudan a darla a conocer. ¿Hablamos?`],
+  ["Post para grupos (pregunta)",`¿Quién vende por WhatsApp y está cansado de repetir precios todo el día? 🙋
+
+Con VentasRoma26 tienes tu catálogo online con fotos, precios y lo que hay. El cliente elige y el pedido te llega hecho. Sin comisiones, 10 días gratis.
+
+👉 ventasroma26.com`],
+  ["Post para grupos (24 h)",`Tu tienda abierta las 24 horas, aunque estés durmiendo 🌙
+
+✅ Catálogo con fotos, precios y disponibilidad
+✅ Un solo enlace para WhatsApp, Instagram y Facebook
+✅ El pedido te llega hecho por WhatsApp
+✅ Aviso en tu móvil con cada pedido
+✅ Sin comisiones
+
+🎁 10 días gratis → ventasroma26.com`],
+  ["Post para grupos (restaurantes)",`¿Tienes restaurante o cafetería? 🍽️
+
+Tu carta en un enlace: fotos, precios y lo que hay hoy. El cliente arma su pedido y te llega por WhatsApp listo para preparar.
+
+Sin comisiones. 10 días gratis → ventasroma26.com`],
+];
+
+// ---- estado ----
+const CLAVE = "vrpromo";
+const hoy = () => new Date().toLocaleDateString("en-CA");
+const cargar = () => { try { return JSON.parse(localStorage.getItem(CLAVE)) || {}; } catch { return {}; } };
+let S = Object.assign({ dias:{}, contactos:[], grupos:[] }, cargar());
+const guardar = () => { try { localStorage.setItem(CLAVE, JSON.stringify(S)); } catch { aviso("No se pudo guardar"); } };
+const dia = (f = hoy()) => (S.dias[f] ||= {});
+const sumar = (k, n = 1) => { const d = dia(); d[k] = Math.max(0, (d[k] || 0) + n); guardar(); };
+const id = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const opts = (lista, sel) => lista.map(x => `<option ${x === sel ? "selected" : ""}>${esc(x)}</option>`).join("");
+const telWa = t => { let d = String(t || "").replace(/\D/g, ""); if (d.length === 8) d = "53" + d; return d; };
+const conNombre = (txt, nombre) => txt.replace("{, nombre}", nombre ? ", " + nombre.split(" ")[0] : "");
+let tab = "hoy", filtroEtapa = "", filtroProv = "", editando = null;
+
+function aviso(t) { const e = document.getElementById("toast"); e.textContent = t; e.classList.add("on"); setTimeout(() => e.classList.remove("on"), 1600); }
+async function copiar(t) {
+  try { await navigator.clipboard.writeText(t); }
+  catch { const a = document.createElement("textarea"); a.value = t; document.body.appendChild(a); a.select(); document.execCommand("copy"); a.remove(); }
+  aviso("Copiado");
+}
+function abrirWa(tel, texto) {
+  const n = telWa(tel);
+  location.href = `https://wa.me/${n}${texto ? "?text=" + encodeURIComponent(texto) : ""}`;
+}
+
+// ---- vistas ----
+function vHoy() {
+  const d = dia(), [tn, td] = TEMAS[new Date().getDay()];
+  const hechas = TAREAS.filter(([k,,m]) => (d[k] || 0) >= m).length;
+  let racha = 0;
+  for (let i = 0; ; i++) {
+    const f = new Date(Date.now() - i * 864e5).toLocaleDateString("en-CA");
+    if ((S.dias[f]?.dm || 0) >= 20) racha++; else if (i > 0) break; else continue;
+  }
+  const vacias = S.contactos.filter(c => c.etapa === "Registrado").length;
+  return `
+  <div class="card tema"><h2>Contenido de hoy · ${tn}</h2>${td}</div>
+  <div class="card"><h2>Rutina de hoy · ${hechas}/${TAREAS.length} ${hechas === TAREAS.length ? "✅" : ""}</h2>
+    ${TAREAS.map(([k, t, m]) => { const v = d[k] || 0, p = Math.min(100, v / m * 100); return `
+      <div class="fila"><div class="txt">${t}<div class="barra"><i style="width:${p}%"></i></div></div>
+        <span class="cnt ${v >= m ? "ok" : ""}">${v}/${m}</span>
+        <button class="b b2 mini" onclick="sumar('${k}',-1);pintar()">−</button>
+        <button class="b mas" onclick="sumar('${k}');pintar()">+</button></div>`; }).join("")}
+  </div>
+  <div class="kpi">
+    <div><b>${racha}</b><span>días seguidos con 20 mensajes</span></div>
+    <div><b>${S.contactos.length}</b><span>contactos</span></div>
+    <div><b>${vacias}</b><span>registrados sin 5 productos</span></div>
+  </div>`;
+}
+
+function formContacto(c = {}) {
+  return `<div class="card"><h2>${c.id ? "Editar contacto" : "Nuevo contacto"}</h2>
+    <input id="fNombre" placeholder="Nombre o negocio" value="${esc(c.nombre)}">
+    <input id="fTel" placeholder="Teléfono (5xxxxxxx)" inputmode="tel" value="${esc(c.tel)}">
+    <div class="dos"><select id="fProv"><option value="">Provincia</option>${opts(PROVINCIAS, c.prov)}</select>
+      <select id="fTipo">${opts(TIPOS, c.tipo || "Negocio")}</select></div>
+    <div class="dos"><select id="fNicho"><option value="">Nicho</option>${opts(NICHOS, c.nicho)}</select>
+      <select id="fEtapa">${opts(ETAPAS, c.etapa || "Contactado")}</select></div>
+    <textarea id="fNotas" placeholder="Notas (grupo donde lo viste, qué vende…)">${esc(c.notas)}</textarea>
+    <div class="acc"><button class="b" onclick="guardarContacto()">Guardar</button>
+      <button class="b b2" onclick="editando=null;pintar()">Cancelar</button>
+      ${c.id ? `<button class="b b2" onclick="borrarContacto('${c.id}')">Borrar</button>` : ""}</div></div>`;
+}
+function guardarContacto() {
+  const v = k => document.getElementById(k).value.trim();
+  if (!v("fNombre")) return aviso("Pon un nombre");
+  const datos = { nombre:v("fNombre"), tel:v("fTel"), prov:v("fProv"), tipo:v("fTipo"), nicho:v("fNicho"), etapa:v("fEtapa"), notas:v("fNotas"), actualizado:hoy() };
+  const c = S.contactos.find(x => x.id === editando?.id);
+  if (c) Object.assign(c, datos); else { S.contactos.unshift({ id:id(), creado:hoy(), ...datos }); sumar("dm"); }
+  editando = null; guardar(); pintar(); aviso("Guardado");
+}
+function borrarContacto(i) { if (!confirm("¿Borrar este contacto?")) return; S.contactos = S.contactos.filter(c => c.id !== i); editando = null; guardar(); pintar(); }
+function avanzar(i) {
+  const c = S.contactos.find(x => x.id === i), n = ETAPAS.indexOf(c.etapa);
+  if (n < ETAPAS.length - 1) { c.etapa = ETAPAS[n + 1]; c.actualizado = hoy(); guardar(); pintar(); aviso("→ " + c.etapa); }
+}
+function vContactos() {
+  if (editando) return formContacto(editando);
+  const lista = S.contactos.filter(c => (!filtroEtapa || c.etapa === filtroEtapa) && (!filtroProv || c.prov === filtroProv));
+  return `
+  <button class="b" style="width:100%;margin-bottom:12px" onclick="editando={};pintar()">+ Nuevo contacto</button>
+  <div class="chips"><button class="chip ${!filtroEtapa ? "on" : ""}" onclick="filtroEtapa='';pintar()">Todos</button>
+    ${ETAPAS.map(e => `<button class="chip ${filtroEtapa === e ? "on" : ""}" onclick="filtroEtapa='${e}';pintar()">${e} · ${S.contactos.filter(c => c.etapa === e).length}</button>`).join("")}</div>
+  <select onchange="filtroProv=this.value;pintar()"><option value="">Todas las provincias</option>${opts(PROVINCIAS, filtroProv)}</select>
+  <div class="card">${lista.length ? lista.map(c => `
+    <div class="fila"><div class="txt" onclick="editando=S.contactos.find(x=>x.id==='${c.id}');pintar()">
+        <b>${esc(c.nombre)}</b> <span class="etapa">${esc(c.etapa)}</span>
+        <small>${esc([c.tipo !== "Negocio" ? c.tipo : "", c.nicho, c.prov].filter(Boolean).join(" · "))}${c.notas ? " — " + esc(c.notas) : ""}</small></div>
+      ${c.tel ? `<button class="b b2 mini" onclick="abrirWa('${esc(c.tel)}')">WA</button>` : ""}
+      ${c.etapa !== "Pagó" ? `<button class="b mini" onclick="avanzar('${c.id}')">→</button>` : ""}</div>`).join("")
+    : `<div class="vacio">Sin contactos todavía. Cada vendedor que veas publicando en un grupo es un contacto.</div>`}</div>`;
+}
+
+function vGrupos() {
+  const orden = [...S.grupos].sort((a, b) => (a.ultimo || "").localeCompare(b.ultimo || ""));
+  const porProv = p => S.grupos.filter(g => g.prov === p).length;
+  return `
+  <div class="card"><h2>Grupos por provincia</h2><div class="chips" style="margin:0">
+    ${PROVINCIAS.map(p => `<span class="chip ${porProv(p) ? "" : "cero"}">${p} · ${porProv(p)}</span>`).join("")}</div></div>
+  <details class="card"><summary>+ Añadir grupo</summary>
+    <input id="gNombre" placeholder="Nombre del grupo" style="margin-top:10px">
+    <select id="gProv"><option value="">Provincia</option>${opts(PROVINCIAS)}</select>
+    <input id="gUrl" placeholder="Enlace del grupo (opcional)" inputmode="url">
+    <button class="b" onclick="nuevoGrupo()">Guardar grupo</button></details>
+  <div class="card"><h2>Toca publicar (el que hace más tiempo primero)</h2>${orden.length ? orden.map(g => `
+    <div class="fila"><div class="txt"><b>${esc(g.nombre)}</b><small>${esc(g.prov)} · ${g.ultimo ? "último: " + g.ultimo : "nunca publicado"}</small></div>
+      ${g.url ? `<button class="b b2 mini" onclick="location.href='${esc(g.url)}'">Abrir</button>` : ""}
+      <button class="b mini" onclick="publique('${g.id}')">${g.ultimo === hoy() ? "✓ hoy" : "Publiqué"}</button>
+      <button class="b b2 mini" onclick="borrarGrupo('${g.id}')">✕</button></div>`).join("")
+    : `<div class="vacio">Añade 3–5 grupos de compra-venta por provincia.</div>`}</div>`;
+}
+function nuevoGrupo() {
+  const n = document.getElementById("gNombre").value.trim(), p = document.getElementById("gProv").value;
+  let u = document.getElementById("gUrl").value.trim();
+  if (!n || !p) return aviso("Pon nombre y provincia");
+  if (u && !/^https?:\/\//.test(u)) u = "https://" + u;
+  S.grupos.push({ id:id(), nombre:n, prov:p, url:u, ultimo:"" }); guardar(); pintar(); aviso("Grupo añadido");
+}
+function publique(i) { const g = S.grupos.find(x => x.id === i); if (g.ultimo === hoy()) return; g.ultimo = hoy(); sumar("grupos"); pintar(); }
+function borrarGrupo(i) { if (!confirm("¿Borrar este grupo?")) return; S.grupos = S.grupos.filter(g => g.id !== i); guardar(); pintar(); }
+
+function vMensajes() {
+  return `<div class="card tema">Toca <b>Copiar</b> y pégalo en WhatsApp o en el grupo. En los contactos, el botón <b>WA</b> abre el chat.</div>` +
+    MENSAJES.map(([t, m], i) => `<div class="card"><h2>${t}</h2><div class="msg">${esc(conNombre(m, ""))}</div>
+      <div class="acc"><button class="b" onclick="copiar(conNombre(MENSAJES[${i}][1],''))">Copiar</button>
+      <button class="b b2" onclick="enviarA(${i})">Enviar a contacto…</button></div></div>`).join("");
+}
+function enviarA(i) {
+  const con = S.contactos.filter(c => c.tel);
+  if (!con.length) return aviso("Primero añade un contacto con teléfono");
+  const nombres = con.map((c, n) => `${n + 1}. ${c.nombre}`).join("\n");
+  const r = parseInt(prompt("¿A quién?\n" + nombres), 10);
+  const c = con[r - 1]; if (!c) return;
+  abrirWa(c.tel, conNombre(MENSAJES[i][1], c.nombre));
+}
+
+function vEmbudo() {
+  const idx = c => ETAPAS.indexOf(c.etapa);
+  const llegan = ETAPAS.map((_, i) => S.contactos.filter(c => idx(c) >= i).length);
+  const semana = k => Array.from({ length:7 }, (_, i) => S.dias[new Date(Date.now() - i * 864e5).toLocaleDateString("en-CA")]?.[k] || 0).reduce((a, b) => a + b, 0);
+  let peor = -1, peorPct = 101;
+  for (let i = 1; i < ETAPAS.length; i++) if (llegan[i - 1]) { const p = llegan[i] / llegan[i - 1] * 100; if (p < peorPct) { peorPct = p; peor = i; } }
+  return `
+  <div class="kpi" style="margin-bottom:12px">
+    <div><b>${semana("dm")}</b><span>mensajes (7 días)</span></div>
+    <div><b>${semana("grupos")}</b><span>grupos (7 días)</span></div>
+    <div><b>${semana("hist")}</b><span>historias (7 días)</span></div></div>
+  <div class="card"><h2>Embudo</h2>${ETAPAS.map((e, i) => { const p = i && llegan[i - 1] ? Math.round(llegan[i] / llegan[i - 1] * 100) : null; return `
+    <div class="fila"><div class="txt">${e}${p !== null ? `<small>${p}% de la etapa anterior</small>` : ""}
+      <div class="barra"><i style="width:${llegan[0] ? llegan[i] / llegan[0] * 100 : 0}%"></i></div></div>
+      <span class="cnt">${llegan[i]}</span></div>`; }).join("")}</div>
+  ${peor > 0 ? `<div class="card tema"><b>Donde más se cae la gente:</b> de "${ETAPAS[peor - 1]}" a "${ETAPAS[peor]}" (${Math.round(peorPct)}%). Trabaja eso esta semana.</div>` : ""}
+  <div class="card"><h2>Copia de seguridad</h2>
+    <p style="font-size:13px;color:var(--gris);margin-top:0">Los datos viven solo en este móvil. Copia la copia de seguridad y guárdala en un chat contigo mismo de vez en cuando.</p>
+    <div class="acc"><button class="b" onclick="copiar(JSON.stringify(S))">Copiar copia</button>
+      <button class="b b2" onclick="importar()">Restaurar</button></div></div>`;
+}
+function importar() {
+  const t = prompt("Pega aquí la copia de seguridad:"); if (!t) return;
+  try { const d = JSON.parse(t); if (!d.dias || !d.contactos) throw 0; if (!confirm("Esto reemplaza los datos actuales. ¿Seguir?")) return; S = d; guardar(); pintar(); aviso("Restaurado"); }
+  catch { aviso("Esa copia no es válida"); }
+}
+
+const TABS = [["hoy","☀","Hoy",vHoy],["contactos","👥","Contactos",vContactos],["grupos","📣","Grupos",vGrupos],["mensajes","💬","Mensajes",vMensajes],["embudo","📊","Embudo",vEmbudo]];
+function pintar() {
+  document.getElementById("fecha").textContent = new Date().toLocaleDateString("es", { weekday:"short", day:"numeric", month:"short" });
+  document.getElementById("app").innerHTML = TABS.find(t => t[0] === tab)[3]();
+  document.getElementById("nav").innerHTML = TABS.map(([k, ic, n]) => `<button class="${k === tab ? "on" : ""}" onclick="tab='${k}';editando=null;pintar();scrollTo(0,0)"><b>${ic}</b>${n}</button>`).join("");
+}
+pintar();
+</script>
+</body>
+</html>

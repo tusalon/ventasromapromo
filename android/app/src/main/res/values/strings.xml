@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">VR26 Promo</string>
+    <string name="title_activity_main">VR26 Promo</string>
+    <string name="package_name">com.ventasroma26.promo</string>
+    <string name="custom_url_scheme">com.ventasroma26.promo</string>
+</resources>
